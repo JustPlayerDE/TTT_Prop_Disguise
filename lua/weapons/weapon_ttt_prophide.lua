@@ -123,9 +123,8 @@ function SWEP:PropDisguise()
 		ang.x = 0 -- The Angles should always be horizontal
 		prop:SetAngles(ang)
 		prop:SetPos(ply:GetPos() + Vector(0,0, 20))
-		prop.fakehp = self.DisguiseHealth -- Using our own health value
-		prop.hp_constant = self.DisguiseHealth
-		ply:SetHealth(50) -- This is the prop's health but displayed as their own
+		prop.fakehp = math.Round(ply:Health() / 2) -- Using our own health value 
+		ply:SetHealth(prop.fakehp) -- This is the prop's health but displayed as their own
 		prop.IsADisguise = true -- Identifier for our prop
 		prop.TiedPly = ply -- The Master
 		prop:SetName(ply:Nick().."'s Disguised Prop") -- Prevent spectator possessing if TTT
@@ -165,7 +164,7 @@ function SWEP:PropUnDisguise()
 		
 		ply:SetAngles(prop:GetAngles())
 		ply:SetPos(prop:GetPos())
-		ply:SetHealth( math.Clamp(prop.hp_constant * 2, 0, 100) ) -- Clamp health, explanation below
+		ply:SetHealth( math.Clamp(prop.fakehp * 2, 0, ply:GetMaxHealth()) ) -- Clamp health, explanation below
 		-- Prop's health is always 50, half of the player's. So we grab the prop's current health and multiply by 2
 		ply:SetVelocity(prop:GetVelocity())
 		ply:DrawViewModel(true)
@@ -266,8 +265,8 @@ local function DamageHandler( ent, dmginfo ) -- Entity Take Damage
 		local dbug_mdl = ent:GetModel()
 		local h = ent.fakehp 
 		local dmg = dmginfo:GetDamage()
-		ent.fakehp = h - (dmg) -- Artificially take damage for the prop
-		ent.hp_constant = ent:Health() -- Make sure this stays updated
+		ent.fakehp = h - (dmg) -- Artificially take damage for the prop 
+        ply:SetHealth(ent.fakehp)
 		if ent.fakehp <= 0 then 
 			net.Start("DisguiseDestroyed")
 			net.Send(ply) -- Tell the client to draw our fancy messages
